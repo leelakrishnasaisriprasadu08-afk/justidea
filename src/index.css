@@ -1,0 +1,227 @@
+:root {
+  --ink: #10231f;
+  --ink-soft: #4b625d;
+  --paper: #f6f4ee;
+  --card: #ffffff;
+  --line: #dfdcd1;
+  --accent: #146b5a;
+  --accent-soft: #e2f0eb;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.app {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.app__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.app h1 {
+  margin: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.25rem, 6vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.app__lead {
+  margin: 0.85rem 0 0;
+  max-width: 34rem;
+  color: var(--ink-soft);
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(16, 35, 31, 0.06), 0 12px 28px -22px rgba(16, 35, 31, 0.5);
+}
+
+.idea-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.idea-form input {
+  flex: 1 1 14rem;
+  min-width: 0;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  color: inherit;
+  background: #fdfcfa;
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+.idea-form input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.idea-form button {
+  padding: 0.7rem 1.1rem;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+
+.idea-form button:hover:not(:disabled) {
+  background: #0f5849;
+}
+
+.idea-form button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.panel__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.25rem 0 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.empty-state {
+  margin: 0;
+  padding: 1rem 0;
+  color: var(--ink-soft);
+}
+
+.idea-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.idea {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.idea:last-child {
+  border-bottom: 0;
+}
+
+.idea__label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.idea__label input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+  flex: none;
+}
+
+.idea__title {
+  overflow-wrap: anywhere;
+}
+
+.idea--done .idea__title {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.idea__remove {
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.idea__remove:hover {
+  color: #8a2b1f;
+  background: var(--accent-soft);
+  border-color: var(--line);
+}
+
+.app__footer {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 30rem) {
+  .app {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .panel {
+    padding: 1.15rem;
+  }
+
+  .idea-form button {
+    flex: 1 1 100%;
+  }
+}
