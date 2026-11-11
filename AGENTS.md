@@ -2,36 +2,50 @@
 
 ## What this app is
 
-React 18 + Vite 6 single-page app (`justidea`). No backend, no database — ideas
-persist in the browser's `localStorage` under the key `justidea.ideas`.
+"Just Idea" — founders post startup ideas, visitors rate them 1–5 and leave
+advice, businesses send contact/support requests to the founder.
+
+Stack: React 18 + Vite 6 (frontend), Express 4 (API), Postgres 16 (data).
+
+## Layout
+
+- `src/` — React app; `BrowserRouter` routes `/`, `/share`, `/ideas/:id`
+- `src/api.js` — all HTTP calls go to `/api`, proxied by Vite to the API service
+- `server/` — Express API (`index.js`), pool + schema (`db.js`), demo seed (`seed.js`)
+- `docker-compose.base44.yml` — `web` (host 3000 → 5173), `api` (3001), `db` (5432)
 
 ## Sandbox / preview specifics
 
-- Run with `docker compose -f docker-compose.base44.yml up -d`. Host port 3000 →
-  Vite 5173. The container installs from `package-lock.json` (`npm ci`) on every
-  start, then runs `npm run dev`.
-- `package-lock.json` must exist and be committed; there is no Node runtime on
-  the sandbox host, so regenerate it with:
-  `docker run --rm -v "$PWD":/app -w /app node:22-bookworm-slim npm install --package-lock-only --no-audit --no-fund`
-- Dependencies live in the `web_node_modules` named volume (not on the host), so
-  `node_modules` never appears in the working tree.
+- Bring up with `docker compose -f docker-compose.base44.yml up -d`; `web` waits
+  for `api` healthy, `api` waits for `db` healthy.
+- Both lock files are committed (`package-lock.json`, `server/package-lock.json`)
+  because each container runs `npm ci` on start. There is no Node on the sandbox
+  host, so regenerate them with a throwaway `node:22-bookworm-slim` container.
+- Tables are created by `server/db.js` at API boot — no migration service. There is
+  no user/auth system: everything is anonymous, identified only by a typed name.
+- `/api` is never published on a host port; Vite proxies it (`API_URL`). Keep it
+  that way — the API has no CORS middleware by design (single origin).
 - The preview proxy reaches Vite as `<port>-<sandbox id>.$BASE44_SANDBOX_HOST_DOMAIN`
   and sends an `Origin` of `https://3000-$BASE44_PUBLIC_HOST_SUFFIX`. `vite.config.js`
-  appends both as `.`-prefixed `server.allowedHosts` entries only when
-  `BASE44_PREVIEW_MODE === "1"`; compose passes those variables through. Without the
-  flag, `allowedHosts` stays empty (Vite's default behavior).
-- File watching uses polling (`server.watch.usePolling`), required for bind mounts.
+  appends both as `.`-prefixed `allowedHosts` entries only when
+  `BASE44_PREVIEW_MODE === "1"`; without the flag the list stays empty.
+- File watching uses polling (`server.watch.usePolling`); the API runs `node --watch`.
 
 ## Verifying it works
 
-- `curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/` → `200`.
+- `curl http://localhost:3000/api/ideas` returns the feed JSON (proves web → api → db).
 - The served HTML must include `/@vite/client` and unhashed `/src/main.jsx` — that
-  proves the dev server (not a production build) is serving the cloned source.
-- In the browser: add an idea, confirm it appears in the list and in
-  `localStorage['justidea.ideas']`, then reload and confirm it is still there.
+  proves the dev server, not a prebuilt bundle, is serving the cloned source.
+- Browser flow: post an idea → rate it → leave advice → send support. Each should
+  appear on the detail page and change the four stat cards.
+- Counts come from the same `GET /api/ideas/:id` response as the lists. After a
+  submit the page re-fetches, so read stats only after the list item appears; a
+  read taken in the same tick can still show the previous values.
 
 ## Gotchas
 
-- There is no test suite or linter configured yet.
-- `crypto.randomUUID()` is used for ids; it needs a secure context, which the
-  preview provides. On plain `http://` hosts other than localhost it is unavailable.
+- `docker compose exec -T api npm run seed` only inserts when `ideas` is empty.
+- Deleting an idea cascades to its ratings, advice and interests.
+- No test suite or linter is configured.
+- Postgres credentials are development-only values inline in compose; swap them
+  before any real deployment.
