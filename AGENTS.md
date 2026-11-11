@@ -14,6 +14,13 @@ Stack: React 18 + Vite 6 (frontend), Express 4 (API), Postgres 16 (data).
 - `server/` — Express API (`index.js`), pool + schema (`db.js`), demo seed (`seed.js`)
 - `docker-compose.base44.yml` — `web` (host 3000 → 5173), `api` (3001), `db` (5432)
 
+## Branches
+
+- `main` carries only `README.md` (commit `052922a`), so anything built from `main`
+  has no app to serve and fails to start. The application code lives on
+  `base44/setup-910ae5cc`; a branch that should run must include that commit
+  (e.g. `git merge origin/base44/setup-910ae5cc` from the initial commit).
+
 ## Sandbox / preview specifics
 
 - Bring up with `docker compose -f docker-compose.base44.yml up -d`; `web` waits
