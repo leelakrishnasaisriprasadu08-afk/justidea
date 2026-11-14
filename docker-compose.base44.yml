@@ -24,6 +24,10 @@ services:
     volumes:
       - ./server:/app
       - api_node_modules:/app/node_modules
+    # Platform-managed secrets (SESSION_SECRET). Never set them under
+    # environment:, which would permanently outrank this file.
+    env_file:
+      - /run/base44/app.env
     environment:
       DATABASE_URL: postgres://justidea:justidea_dev_password@db:5432/justidea
       PORT: "3001"

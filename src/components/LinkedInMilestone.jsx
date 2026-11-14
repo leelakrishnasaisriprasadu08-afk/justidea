@@ -42,9 +42,15 @@ export default function LinkedInMilestone({ idea }) {
         ratings
       </p>
 
-      {!linkedin.connected && (
+      {!linkedin.connected && linkedin.configured && (
         <p className="small">
           <a href={linkedinConnectUrl}>Connect LinkedIn</a> to enable publishing from here.
+        </p>
+      )}
+
+      {!linkedin.connected && !linkedin.configured && (
+        <p className="small muted">
+          LinkedIn sign-in is not configured on this server yet, so publishing is unavailable.
         </p>
       )}
 

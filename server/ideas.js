@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { pool } from './db.js';
 import { asyncHandler, requireUser } from './auth.js';
 import { cleanText, rateLimit, verifyChallenge } from './security.js';
-import { shareIdeaToLinkedin } from './linkedin.js';
+import { linkedinConfigured, shareIdeaToLinkedin } from './linkedin.js';
 
 // The LinkedIn milestone the product promises: an idea that reaches this many
 // ratings can be published to the founder's LinkedIn feed.
@@ -133,6 +133,7 @@ function shapeDetail(detail, user) {
       reached: idea.rating_count >= MILESTONE_STARS,
     },
     linkedin: {
+      configured: linkedinConfigured,
       connected: Boolean(user?.linkedin_sub),
       posted: Boolean(lastPost),
       lastPostAt: lastPost?.posted_at || null,

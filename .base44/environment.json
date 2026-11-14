@@ -2,5 +2,21 @@
   "previewPort": 3000,
   "healthPath": "/",
   "startCommand": "docker compose -f docker-compose.base44.yml up -d",
-  "secrets": []
+  "secrets": [
+    {
+      "name": "SESSION_SECRET",
+      "description": "Signing key for session cookies, CSRF/challenge tokens and encrypted LinkedIn tokens. Without it the API boots with an ephemeral key, so sign-ins and human checks break on every restart.",
+      "requiredAtBoot": true
+    },
+    {
+      "name": "LINKEDIN_CLIENT_ID",
+      "description": "Optional. LinkedIn OAuth client id from the LinkedIn developer portal. Until it is set, LinkedIn sign-in and milestone publishing stay disabled.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "LINKEDIN_CLIENT_SECRET",
+      "description": "Optional. LinkedIn OAuth client secret from the LinkedIn developer portal. Required together with LINKEDIN_CLIENT_ID to enable LinkedIn.",
+      "requiredAtBoot": false
+    }
+  ]
 }
