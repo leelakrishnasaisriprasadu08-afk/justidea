@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { addAdvice, addInterest, getIdea, rateIdea } from '../api.js';
+import { useAuth } from '../auth.jsx';
+import LinkedInMilestone from '../components/LinkedInMilestone.jsx';
+import usePageMeta from '../components/PageMeta.jsx';
+import SignInNotice from '../components/SignInNotice.jsx';
+import StartupHelp from '../components/StartupHelp.jsx';
 import Stars from '../components/Stars.jsx';
 
 function formatDate(value) {
@@ -13,9 +18,16 @@ function formatDate(value) {
 
 export default function IdeaPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [idea, setIdea] = useState(null);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+
+  usePageMeta({
+    title: idea?.title,
+    description: idea?.pitch,
+    path: idea ? `/ideas/${idea.id}` : undefined,
+  });
 
   const load = useCallback(async () => {
     try {
@@ -83,20 +95,37 @@ export default function IdeaPage() {
 
       <div className="columns">
         <div className="column">
-          <RateForm idea={idea} onRated={load} />
-          <AdviceSection idea={idea} onAdded={load} />
+          {user ? (
+            <>
+              <RateForm idea={idea} onRated={load} defaultName={user.displayName} />
+              <AdviceSection idea={idea} onAdded={load} defaultName={user.displayName} />
+            </>
+          ) : (
+            <SignInNotice action="rate this idea and leave advice" />
+          )}
         </div>
         <div className="column">
-          <BusinessPanel idea={idea} onAdded={load} />
+          <StartupHelp idea={idea} onChanged={load} />
+          {user ? (
+            <BusinessPanel
+              idea={idea}
+              onAdded={load}
+              defaultName={user.displayName}
+              defaultEmail={user.email}
+            />
+          ) : (
+            <SignInNotice action="contact this founder" />
+          )}
+          <LinkedInMilestone idea={idea} />
         </div>
       </div>
     </>
   );
 }
 
-function RateForm({ idea, onRated }) {
+function RateForm({ idea, onRated, defaultName = '' }) {
   const [score, setScore] = useState(0);
-  const [voterName, setVoterName] = useState('');
+  const [voterName, setVoterName] = useState(defaultName);
   const [state, setState] = useState('idle');
   const [error, setError] = useState('');
 
@@ -146,8 +175,8 @@ function RateForm({ idea, onRated }) {
   );
 }
 
-function AdviceSection({ idea, onAdded }) {
-  const [authorName, setAuthorName] = useState('');
+function AdviceSection({ idea, onAdded, defaultName = '' }) {
+  const [authorName, setAuthorName] = useState(defaultName);
   const [body, setBody] = useState('');
   const [state, setState] = useState('idle');
   const [error, setError] = useState('');
@@ -215,10 +244,10 @@ function AdviceSection({ idea, onAdded }) {
   );
 }
 
-function BusinessPanel({ idea, onAdded }) {
+function BusinessPanel({ idea, onAdded, defaultName = '', defaultEmail = '' }) {
   const [kind, setKind] = useState('contact');
-  const [company, setCompany] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
+  const [company, setCompany] = useState(defaultName);
+  const [contactEmail, setContactEmail] = useState(defaultEmail);
   const [message, setMessage] = useState('');
   const [state, setState] = useState('idle');
   const [error, setError] = useState('');

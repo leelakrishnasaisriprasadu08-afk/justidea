@@ -8,6 +8,27 @@ export const pool = new Pool({
 });
 
 const SCHEMA = `
+CREATE TABLE IF NOT EXISTS users (
+  id serial PRIMARY KEY,
+  email text NOT NULL UNIQUE,
+  password_hash text,
+  display_name text NOT NULL,
+  role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'demo', 'admin')),
+  linkedin_sub text UNIQUE,
+  linkedin_name text,
+  linkedin_token text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id text PRIMARY KEY,
+  user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions (user_id);
+
 CREATE TABLE IF NOT EXISTS ideas (
   id serial PRIMARY KEY,
   title text NOT NULL,
@@ -18,6 +39,10 @@ CREATE TABLE IF NOT EXISTS ideas (
   founder_email text NOT NULL DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE ideas ADD COLUMN IF NOT EXISTS owner_id integer REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE ideas ADD COLUMN IF NOT EXISTS help_enabled boolean NOT NULL DEFAULT false;
+ALTER TABLE ideas ADD COLUMN IF NOT EXISTS help_notes text NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS ratings (
   id serial PRIMARY KEY,
@@ -45,9 +70,20 @@ CREATE TABLE IF NOT EXISTS interests (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+ALTER TABLE interests ADD COLUMN IF NOT EXISTS helper_user_id integer REFERENCES users(id) ON DELETE SET NULL;
+
+CREATE TABLE IF NOT EXISTS linkedin_posts (
+  id serial PRIMARY KEY,
+  idea_id integer NOT NULL REFERENCES ideas(id) ON DELETE CASCADE,
+  user_id integer REFERENCES users(id) ON DELETE SET NULL,
+  post_urn text NOT NULL DEFAULT '',
+  posted_at timestamptz NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS ratings_idea_id_idx ON ratings (idea_id);
 CREATE INDEX IF NOT EXISTS advice_idea_id_idx ON advice (idea_id);
 CREATE INDEX IF NOT EXISTS interests_idea_id_idx ON interests (idea_id);
+CREATE INDEX IF NOT EXISTS ideas_owner_id_idx ON ideas (owner_id);
 `;
 
 export async function initSchema() {

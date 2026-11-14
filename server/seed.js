@@ -1,4 +1,5 @@
 import { pool, initSchema } from './db.js';
+import { ensureDemoUser, DEMO_EMAIL } from './demo.js';
 
 const DEMO_IDEAS = [
   {
@@ -29,6 +30,8 @@ const DEMO_IDEAS = [
 
 async function seed() {
   await initSchema();
+  const demo = await ensureDemoUser();
+
   const { rows } = await pool.query('SELECT COUNT(*)::int AS count FROM ideas');
   if (rows[0].count > 0) {
     console.log('Ideas already exist — skipping seed');
@@ -37,9 +40,9 @@ async function seed() {
 
   for (const idea of DEMO_IDEAS) {
     await pool.query(
-      `INSERT INTO ideas (title, pitch, description, category, founder_name)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [idea.title, idea.pitch, idea.description, idea.category, idea.founderName]
+      `INSERT INTO ideas (title, pitch, description, category, founder_name, founder_email, owner_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [idea.title, idea.pitch, idea.description, idea.category, idea.founderName, DEMO_EMAIL, demo.id]
     );
   }
 

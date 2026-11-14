@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { createIdea } from '../api.js';
+import { useAuth } from '../auth.jsx';
+import HumanCheck from '../components/HumanCheck.jsx';
+import usePageMeta from '../components/PageMeta.jsx';
 
 const CATEGORIES = [
   'SaaS',
@@ -14,17 +17,29 @@ const CATEGORIES = [
 ];
 
 export default function SharePage() {
+  usePageMeta({
+    title: 'Share an idea',
+    description:
+      'Post your startup idea on Just Idea and collect star ratings, written advice and business support requests.',
+    path: '/share',
+  });
+
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [form, setForm] = useState({
     title: '',
     pitch: '',
     description: '',
     category: 'SaaS',
-    founderName: '',
-    founderEmail: '',
+    founderName: user?.displayName || '',
+    founderEmail: user?.email || '',
   });
+  const [human, setHuman] = useState({ token: '', answer: '' });
   const [state, setState] = useState('idle');
   const [error, setError] = useState('');
+
+  if (loading) return <p className="muted">Checking your account…</p>;
+  if (!user) return <Navigate to="/login?next=%2Fshare" replace />;
 
   function update(field) {
     return (event) => setForm({ ...form, [field]: event.target.value });
@@ -35,7 +50,7 @@ export default function SharePage() {
     try {
       setState('saving');
       setError('');
-      const { id } = await createIdea(form);
+      const { id } = await createIdea(form, human);
       navigate(`/ideas/${id}`);
     } catch (saveError) {
       setError(saveError.message);
@@ -50,8 +65,9 @@ export default function SharePage() {
         <h1>Post your startup idea</h1>
         <p className="hero__lead">
           Keep the pitch to one sentence. People rate it, tell you what is broken, and
-          businesses can reach out.
+          businesses can reach out. You can open startup help afterwards.
         </p>
+        <p className="muted small">Posting as {user.displayName}.</p>
       </header>
 
       <form className="panel stack form-panel" onSubmit={handleSubmit}>
@@ -114,7 +130,7 @@ export default function SharePage() {
             />
           </label>
           <label className="field">
-            <span>Email for businesses (optional)</span>
+            <span>Admin email for helpers (optional)</span>
             <input
               type="email"
               maxLength={160}
@@ -124,6 +140,8 @@ export default function SharePage() {
             />
           </label>
         </div>
+
+        <HumanCheck onChange={setHuman} id="idea-human-check" />
 
         {error && <p className="form-error">{error}</p>}
 
