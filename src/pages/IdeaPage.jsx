@@ -47,14 +47,14 @@ export default function IdeaPage() {
   if (status === 'error') {
     return (
       <div className="notice notice--error">
-        {error} <Link to="/">Back to all ideas</Link>
+        {error} <Link to="/ideas">Back to all ideas</Link>
       </div>
     );
   }
 
   return (
     <>
-      <Link className="back-link" to="/">
+      <Link className="back-link" to="/ideas">
         ← All ideas
       </Link>
 

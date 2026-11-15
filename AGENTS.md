@@ -9,7 +9,9 @@ Stack: React 18 + Vite 6 (frontend), Express 4 (API), Postgres 16 (data).
 
 ## Layout
 
-- `src/` — React app; `BrowserRouter` routes `/`, `/share`, `/ideas/:id`, `/login`, `/terms`
+- `src/` — React app; `BrowserRouter` routes `/` (public opening page with the
+  top "Sign in" button), `/ideas` (the app feed), `/share`, `/ideas/:id`,
+  `/login`, `/terms`. Signing in lands on `/ideas`.
 - `src/api.js` — all HTTP calls go to `/api`, proxied by Vite to the API service
 - `src/auth.jsx` — `AuthProvider` / `useAuth`; session state comes from `/api/auth/me`
 - `server/` — Express API (`index.js`), pool + schema (`db.js`), auth (`auth.js`,

@@ -32,11 +32,11 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
-  const next = params.get('next') || '/';
+  const next = params.get('next') || '/ideas';
   const linkedinIssue = params.get('linkedin');
 
   const goNext = useCallback(() => {
-    navigate(next.startsWith('/') ? next : '/', { replace: true });
+    navigate(next.startsWith('/') ? next : '/ideas', { replace: true });
   }, [navigate, next]);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export default function LoginPage() {
         <div className="panel">
           <h1>You are signed in</h1>
           <p className="muted">
-            Signed in as {user.displayName}. <Link to="/">Back to the ideas</Link>.
+            Signed in as {user.displayName}. <Link to="/ideas">Go to the ideas</Link>.
           </p>
         </div>
       </section>

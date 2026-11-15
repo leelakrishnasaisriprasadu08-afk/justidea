@@ -1,7 +1,17 @@
-import { BrowserRouter, Link, NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Link,
+  NavLink,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth.jsx';
 import FeedPage from './pages/FeedPage.jsx';
 import IdeaPage from './pages/IdeaPage.jsx';
+import LandingPage from './pages/LandingPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SharePage from './pages/SharePage.jsx';
 import TermsPage from './pages/TermsPage.jsx';
@@ -9,6 +19,8 @@ import TermsPage from './pages/TermsPage.jsx';
 function Header() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const onLanding = pathname === '/';
 
   async function handleSignOut() {
     await signOut();
@@ -17,28 +29,38 @@ function Header() {
 
   return (
     <header className="site-header">
-      <Link className="brand" to="/">
+      <Link className="brand" to={user && !onLanding ? '/ideas' : '/'}>
         Just Idea
       </Link>
-      <nav className="site-nav">
-        <NavLink to="/" end>
-          Ideas
-        </NavLink>
-        <NavLink to="/share">Share an idea</NavLink>
-        <NavLink to="/terms">Terms</NavLink>
-        {!loading && !user && <NavLink to="/login">Sign in</NavLink>}
-        {!loading && user && (
-          <>
-            <span className="nav-user" title={user.email}>
-              {user.displayName}
-              {user.role === 'demo' ? ' (demo)' : ''}
-            </span>
-            <button type="button" className="link-button" onClick={handleSignOut}>
-              Sign out
-            </button>
-          </>
-        )}
-      </nav>
+
+      {onLanding ? (
+        <div className="header-actions">
+          <Link
+            className="button button--small"
+            to={user ? '/ideas' : '/login'}
+          >
+            {user ? 'Open the app' : 'Sign in'}
+          </Link>
+        </div>
+      ) : (
+        <nav className="site-nav">
+          <NavLink to="/ideas">Ideas</NavLink>
+          <NavLink to="/share">Share an idea</NavLink>
+          <NavLink to="/terms">Terms</NavLink>
+          {!loading && !user && <NavLink to="/login">Sign in</NavLink>}
+          {!loading && user && (
+            <>
+              <span className="nav-user" title={user.email}>
+                {user.displayName}
+                {user.role === 'demo' ? ' (demo)' : ''}
+              </span>
+              <button type="button" className="link-button" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </>
+          )}
+        </nav>
+      )}
     </header>
   );
 }
@@ -51,7 +73,8 @@ export default function App() {
           <Header />
           <main className="content">
             <Routes>
-              <Route path="/" element={<FeedPage />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/ideas" element={<FeedPage />} />
               <Route path="/share" element={<SharePage />} />
               <Route path="/ideas/:id" element={<IdeaPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -62,7 +85,7 @@ export default function App() {
           <footer className="site-footer">
             <p>Just Idea — founders post, everyone rates, businesses reach out.</p>
             <p className="small">
-              <Link to="/terms">Terms of service</Link> · <Link to="/login">Sign in or use the demo account</Link>
+              <Link to="/ideas">Ideas</Link> · <Link to="/terms">Terms of service</Link>
             </p>
           </footer>
         </div>

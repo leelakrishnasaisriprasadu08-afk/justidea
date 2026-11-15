@@ -5,7 +5,7 @@ import usePageMeta from '../components/PageMeta.jsx';
 import IdeaCard from '../components/IdeaCard.jsx';
 
 export default function FeedPage() {
-  usePageMeta({ path: '/' });
+  usePageMeta({ path: '/ideas' });
   const [ideas, setIdeas] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
