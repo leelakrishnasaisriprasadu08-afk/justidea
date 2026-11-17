@@ -31,6 +31,10 @@ services:
     environment:
       DATABASE_URL: postgres://justidea:justidea_dev_password@db:5432/justidea
       PORT: "3001"
+      # LinkedIn's OAuth callback must come back on the public preview origin
+      # (the sandbox-internal host the proxy forwards would never match the
+      # redirect URI registered in the LinkedIn app).
+      PUBLIC_BASE_URL: https://3000-${BASE44_PUBLIC_HOST_SUFFIX}
     depends_on:
       db:
         condition: service_healthy

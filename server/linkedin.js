@@ -109,7 +109,8 @@ router.get(
     }
 
     await createSession(res, userId);
-    res.redirect('/');
+    // Linked accounts land in the app feed, the same place password sign-in goes.
+    res.redirect('/ideas');
   })
 );
 
