@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import IdeaActions from './IdeaActions.jsx';
 import Stars from './Stars.jsx';
 
 export default function IdeaCard({ idea }) {
@@ -23,13 +24,12 @@ export default function IdeaCard({ idea }) {
       <div className="card__meta">
         <span>by {idea.founder_name}</span>
         <span>
-          {idea.advice_count} {idea.advice_count === 1 ? 'note' : 'notes'}
-        </span>
-        <span>
           {idea.interest_count} interested
           {idea.support_count > 0 ? ` · ${idea.support_count} supporting` : ''}
         </span>
       </div>
+
+      <IdeaActions idea={idea} />
     </article>
   );
 }

@@ -531,6 +531,7 @@ button {
 .button:focus-visible,
 .button--ghost:focus-visible,
 .menu-toggle:focus-visible,
+.card-action:focus-visible,
 .segmented button:focus-visible,
 .star:focus-visible,
 .link-button:focus-visible,
@@ -720,6 +721,78 @@ a:focus-visible {
   border-top: 1px solid rgba(239, 230, 211, 0.9);
   font-size: 0.76rem;
   color: var(--ink-soft);
+}
+
+/* ---------- four actions on every idea ---------- */
+
+.card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.card-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.34rem;
+  padding: 0.5rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: none;
+  background: linear-gradient(180deg, #fffefb, var(--card-warm));
+  border: 0;
+  border-radius: 0.85rem;
+  cursor: pointer;
+  box-shadow: var(--puff), 0 6px 12px -10px rgba(120, 95, 58, 0.85);
+  transition:
+    transform 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    color 0.18s var(--ease),
+    background 0.18s var(--ease);
+}
+
+.card-action svg {
+  flex: none;
+}
+
+.card-action:hover {
+  color: var(--pine-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--puff-deep), 0 10px 16px -12px rgba(120, 95, 58, 0.85);
+}
+
+.card-action:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: var(--press);
+}
+
+.card-action:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.card-action.is-liked {
+  color: var(--clay-strong);
+  background: linear-gradient(180deg, #fff8ee, var(--clay-tint));
+}
+
+.card-action__count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: inherit;
+  opacity: 0.75;
+}
+
+/* Deep links from the cards land below the sticky header. */
+#comment,
+#contact,
+#suggest {
+  scroll-margin-top: 6.5rem;
 }
 
 .empty-state {

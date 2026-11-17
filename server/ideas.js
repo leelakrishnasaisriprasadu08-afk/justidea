@@ -14,6 +14,7 @@ const createLimit = rateLimit({ key: 'ideas:create', windowMs: 10 * 60 * 1000, m
 const rateLimitVote = rateLimit({ key: 'ideas:rate', windowMs: 10 * 60 * 1000, max: 40 });
 const rateLimitAdvice = rateLimit({ key: 'ideas:advice', windowMs: 10 * 60 * 1000, max: 20 });
 const rateLimitInterest = rateLimit({ key: 'ideas:interest', windowMs: 10 * 60 * 1000, max: 20 });
+const rateLimitLike = rateLimit({ key: 'ideas:like', windowMs: 10 * 60 * 1000, max: 120 });
 
 const FEED_COLUMNS = `
   SELECT i.id, i.title, i.pitch, i.description, i.category, i.founder_name, i.created_at,
@@ -22,7 +23,8 @@ const FEED_COLUMNS = `
     (SELECT COUNT(*) FROM ratings r WHERE r.idea_id = i.id)::int AS rating_count,
     (SELECT COUNT(*) FROM advice a WHERE a.idea_id = i.id)::int AS advice_count,
     (SELECT COUNT(*) FROM interests n WHERE n.idea_id = i.id)::int AS interest_count,
-    (SELECT COUNT(*) FROM interests n WHERE n.idea_id = i.id AND n.kind = 'support')::int AS support_count
+    (SELECT COUNT(*) FROM interests n WHERE n.idea_id = i.id AND n.kind = 'support')::int AS support_count,
+    (SELECT COUNT(*) FROM idea_likes l WHERE l.idea_id = i.id)::int AS like_count
   FROM ideas i
 `;
 
@@ -33,7 +35,8 @@ const DETAIL_COLUMNS = `
     (SELECT COUNT(*) FROM ratings r WHERE r.idea_id = i.id)::int AS rating_count,
     (SELECT COUNT(*) FROM advice a WHERE a.idea_id = i.id)::int AS advice_count,
     (SELECT COUNT(*) FROM interests n WHERE n.idea_id = i.id)::int AS interest_count,
-    (SELECT COUNT(*) FROM interests n WHERE n.idea_id = i.id AND n.kind = 'support')::int AS support_count
+    (SELECT COUNT(*) FROM interests n WHERE n.idea_id = i.id AND n.kind = 'support')::int AS support_count,
+    (SELECT COUNT(*) FROM idea_likes l WHERE l.idea_id = i.id)::int AS like_count
   FROM ideas i
 `;
 
@@ -46,7 +49,7 @@ async function loadDetail(id) {
   const { rows } = await pool.query(`${DETAIL_COLUMNS} WHERE i.id = $1`, [id]);
   if (rows.length === 0) return null;
 
-  const [advice, interests, ratings, posts] = await Promise.all([
+  const [advice, interests, ratings, posts, likes] = await Promise.all([
     pool.query(
       `SELECT id, author_name, body, created_at FROM advice
        WHERE idea_id = $1 ORDER BY created_at DESC`,
@@ -67,6 +70,7 @@ async function loadDetail(id) {
        WHERE idea_id = $1 ORDER BY posted_at DESC LIMIT 1`,
       [id]
     ),
+    pool.query('SELECT user_id FROM idea_likes WHERE idea_id = $1', [id]),
   ]);
 
   return {
@@ -75,11 +79,12 @@ async function loadDetail(id) {
     interests: interests.rows,
     ratings: ratings.rows,
     lastPost: posts.rows[0] || null,
+    likes: likes.rows,
   };
 }
 
 function shapeDetail(detail, user) {
-  const { idea, advice, interests, ratings, lastPost } = detail;
+  const { idea, advice, interests, ratings, lastPost, likes } = detail;
   const viewerId = user?.id ?? null;
   const isOwner = Boolean(viewerId && idea.owner_id === viewerId);
   const isHelper = Boolean(viewerId && interests.some((row) => row.helper_user_id === viewerId));
@@ -99,6 +104,8 @@ function shapeDetail(detail, user) {
     advice_count: idea.advice_count,
     interest_count: idea.interest_count,
     support_count: idea.support_count,
+    like_count: idea.like_count,
+    liked_by_me: Boolean(viewerId && likes.some((row) => row.user_id === viewerId)),
     advice,
     // Helper identities are never exposed to the public feed.
     interests: interests.map((row) => ({
@@ -143,11 +150,22 @@ function shapeDetail(detail, user) {
 
 router.get(
   '/',
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
     const { rows } = await pool.query(
       `${FEED_COLUMNS} ORDER BY i.created_at DESC, i.id DESC`
     );
-    res.json(rows);
+
+    // The feed is public; a signed-in visitor also gets their own like state.
+    const liked = new Set();
+    if (req.user) {
+      const { rows: mine } = await pool.query(
+        'SELECT idea_id FROM idea_likes WHERE user_id = $1',
+        [req.user.id]
+      );
+      mine.forEach((row) => liked.add(row.idea_id));
+    }
+
+    res.json(rows.map((row) => ({ ...row, liked_by_me: liked.has(row.id) })));
   })
 );
 
@@ -221,6 +239,38 @@ router.post(
 
     const { rows } = await pool.query(`${FEED_COLUMNS} WHERE i.id = $1`, [id]);
     res.status(201).json(rows[0]);
+  })
+);
+
+// Liking is a toggle: press once to like, again to take it back.
+router.post(
+  '/:id/like',
+  requireUser,
+  rateLimitLike,
+  asyncHandler(async (req, res) => {
+    const id = parseId(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Invalid idea id' });
+
+    const exists = await pool.query('SELECT 1 FROM ideas WHERE id = $1', [id]);
+    if (exists.rowCount === 0) return res.status(404).json({ error: 'Idea not found' });
+
+    const removed = await pool.query(
+      'DELETE FROM idea_likes WHERE idea_id = $1 AND user_id = $2',
+      [id, req.user.id]
+    );
+    const liked = removed.rowCount === 0;
+    if (liked) {
+      await pool.query(
+        'INSERT INTO idea_likes (idea_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [id, req.user.id]
+      );
+    }
+
+    const { rows } = await pool.query(
+      'SELECT COUNT(*)::int AS like_count FROM idea_likes WHERE idea_id = $1',
+      [id]
+    );
+    res.json({ liked, like_count: rows[0].like_count });
   })
 );
 

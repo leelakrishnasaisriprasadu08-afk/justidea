@@ -72,6 +72,13 @@ CREATE TABLE IF NOT EXISTS interests (
 
 ALTER TABLE interests ADD COLUMN IF NOT EXISTS helper_user_id integer REFERENCES users(id) ON DELETE SET NULL;
 
+CREATE TABLE IF NOT EXISTS idea_likes (
+  idea_id integer NOT NULL REFERENCES ideas(id) ON DELETE CASCADE,
+  user_id integer NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (idea_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS linkedin_posts (
   id serial PRIMARY KEY,
   idea_id integer NOT NULL REFERENCES ideas(id) ON DELETE CASCADE,
@@ -83,6 +90,7 @@ CREATE TABLE IF NOT EXISTS linkedin_posts (
 CREATE INDEX IF NOT EXISTS ratings_idea_id_idx ON ratings (idea_id);
 CREATE INDEX IF NOT EXISTS advice_idea_id_idx ON advice (idea_id);
 CREATE INDEX IF NOT EXISTS interests_idea_id_idx ON interests (idea_id);
+CREATE INDEX IF NOT EXISTS idea_likes_idea_id_idx ON idea_likes (idea_id);
 CREATE INDEX IF NOT EXISTS ideas_owner_id_idx ON ideas (owner_id);
 `;
 

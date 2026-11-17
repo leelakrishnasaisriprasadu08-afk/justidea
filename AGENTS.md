@@ -64,6 +64,11 @@ Stack: React 18 + Vite 6 (frontend), Express 4 (API), Postgres 16 (data).
   proves the dev server, not a prebuilt bundle, is serving the cloned source.
 - Browser flow: post an idea → rate it → leave advice → send support. Each should
   appear on the detail page and change the four stat cards.
+- Every feed card carries four actions (`src/components/IdeaActions.jsx`): Like is a
+  signed-in toggle (`POST /api/ideas/:id/like`, rows in `idea_likes`, feed returns
+  `like_count` + `liked_by_me`); Comment, Contact and Suggest deep-link to
+  `/ideas/:id#comment`, `#contact` and `#suggest`, which `IdeaPage` scrolls to
+  (the suggestion anchor also focuses the advice textarea).
 - Signed-in flow: "Use the demo account" on `/login`, then open one of the demo
   ideas — the owner-only startup-help and LinkedIn cards appear on `/ideas/:id`.
 - Counts come from the same `GET /api/ideas/:id` response as the lists. After a

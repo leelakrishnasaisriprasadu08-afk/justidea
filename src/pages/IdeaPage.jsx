@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { addAdvice, addInterest, getIdea, rateIdea } from '../api.js';
 import { useAuth } from '../auth.jsx';
 import LinkedInMilestone from '../components/LinkedInMilestone.jsx';
@@ -18,6 +18,7 @@ function formatDate(value) {
 
 export default function IdeaPage() {
   const { id } = useParams();
+  const { hash } = useLocation();
   const { user } = useAuth();
   const [idea, setIdea] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -42,6 +43,15 @@ export default function IdeaPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Card buttons deep-link into the right part of the page, e.g. /ideas/3#contact.
+  useEffect(() => {
+    if (status !== 'ready' || !hash) return;
+    const target = document.getElementById(hash.slice(1));
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (hash === '#suggest') target.querySelector('textarea')?.focus({ preventScroll: true });
+  }, [hash, status]);
 
   if (status === 'loading') return <p className="muted">Loading idea…</p>;
   if (status === 'error') {
@@ -201,29 +211,31 @@ function AdviceSection({ idea, onAdded, defaultName = '' }) {
   }
 
   return (
-    <section className="panel">
+    <section className="panel" id="comment">
       <h2 className="panel__title">Advice &amp; feedback</h2>
 
-      <form className="stack" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          aria-label="Your name for the advice"
-          placeholder="Your name (optional)"
-          value={authorName}
-          onChange={(event) => setAuthorName(event.target.value)}
-        />
-        <textarea
-          rows={3}
-          aria-label="Your advice"
-          placeholder="What would you tell this founder?"
-          value={body}
-          onChange={(event) => setBody(event.target.value)}
-        />
-        {error && <p className="form-error">{error}</p>}
-        <button className="button" type="submit" disabled={state === 'saving'}>
-          {state === 'saving' ? 'Posting…' : 'Post advice'}
-        </button>
-      </form>
+      <div id="suggest">
+        <form className="stack" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            aria-label="Your name for the advice"
+            placeholder="Your name (optional)"
+            value={authorName}
+            onChange={(event) => setAuthorName(event.target.value)}
+          />
+          <textarea
+            rows={3}
+            aria-label="Your advice"
+            placeholder="What would you tell this founder?"
+            value={body}
+            onChange={(event) => setBody(event.target.value)}
+          />
+          {error && <p className="form-error">{error}</p>}
+          <button className="button" type="submit" disabled={state === 'saving'}>
+            {state === 'saving' ? 'Posting…' : 'Post advice'}
+          </button>
+        </form>
+      </div>
 
       {idea.advice.length === 0 ? (
         <p className="muted">No advice yet. Yours would be the first.</p>
@@ -274,7 +286,7 @@ function BusinessPanel({ idea, onAdded, defaultName = '', defaultEmail = '' }) {
   }
 
   return (
-    <section className="panel panel--accent">
+    <section className="panel panel--accent" id="contact">
       <h2 className="panel__title">For businesses</h2>
       <p className="panel__hint">
         Reach the founder directly, or offer support and let them come to you.

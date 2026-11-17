@@ -63,6 +63,8 @@ export const createIdea = (idea, human) =>
 export const rateIdea = (id, rating) =>
   request(`/ideas/${id}/ratings`, { method: 'POST', body: rating });
 
+export const likeIdea = (id) => request(`/ideas/${id}/like`, { method: 'POST', body: {} });
+
 export const addAdvice = (id, advice) =>
   request(`/ideas/${id}/advice`, { method: 'POST', body: advice });
 
